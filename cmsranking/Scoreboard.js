@@ -226,8 +226,6 @@ var Scoreboard = new function () {
         self.sort();
     };
 
-    
-
 
     self.make_row = function (user) {
         // See the comment in .make_cols() for the reason we use colspans.
@@ -239,15 +237,11 @@ var Scoreboard = new function () {
     <td colspan=\"10\" class=\"l_name\">" + escapeHTML(user["l_name"]) + "</td>";
 
         if (user['team']) {
-            if (DataStore.asset_config && DataStore.asset_config["noflags"])
-                result += " \
-            <td class=\"team\">" + user["team"] + "</td>";
-            else
-                result += " \
-    <td class=\"team\"><img src=\"" + Config.get_flag_url(user["team"]) + "\" title=\"" + DataStore.teams[user["team"]]["name"] + "\" /></td>";
+            result += " \
+    <td class=\"team\" title=\"" + DataStore.teams[user["team"]]["name"] + "\">" + user['key'] + "</td>";
         } else {
             result += " \
-    <td class=\"team\"></td>";
+    <td class=\"team\">" + user['key'] + "</td>";
         }
 
         var contests = DataStore.contest_list;
@@ -409,11 +403,10 @@ var Scoreboard = new function () {
 
         $row.children("td.f_name").text(user["f_name"]);
         $row.children("td.l_name").text(user["l_name"]);
-
+        
+        $row.children(".team").text(user['key']);
         if (user["team"]) {
-            $row.children(".team").html("<img src=\"" + Config.get_flag_url(user["team"]) + "\" title=\"" + DataStore.teams[user["team"]]["name"] + "\" />");
-        } else {
-            $row.children(".team").text("");
+            $row.children(".team").attr("title", DataStore.teams[user["team"]]["name"]);
         }
     };
 
