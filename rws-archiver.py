@@ -3,6 +3,7 @@ import grequests
 import requests
 from requests.packages.urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
+from requests.auth import HTTPBasicAuth
 import os
 import sys
 import json
@@ -22,6 +23,8 @@ parser.add_argument("--css", help="Crawl the page's CSS", action="store_true")
 parser.add_argument("--nofaces", help="Don't crawl user faces", action="store_true")
 parser.add_argument("--noflags", help="Don't crawl team flags", action="store_true")
 parser.add_argument("--nosublist", help="Don't crawl detailed submission info", action="store_true")
+parser.add_argument("-u", "--username", help="HTTP Auth Username", type=str)
+parser.add_argument("-p", "--password", help="HTTP Auth Password", type=str)
 
 args = parser.parse_args()
 
@@ -31,6 +34,11 @@ if url.endswith("/"):
     url = url[:-1]
 if "Ranking.html" in url:
     url = url[:url.rfind("/")]
+
+if (args.username is None) != (args.password is None):
+  raise Exception("Both username and password must be specified, or None at all")
+
+auth = HTTPBasicAuth(args.username, args.password)
 
 dir_names = ["contests", "teams", "tasks", "users"]
 file_names = ["logo", "scores", "history", "img/favicon.ico"]
@@ -65,6 +73,7 @@ print("Saving directories...")
 rs = [grequests.get(url + "/" + dir_names[i] + "/",
                     verify=False,
                     stream=False,
+                    auth=auth,
                     session=sessions[i % NUM_SESSIONS]) for i in range(len(dir_names))]
 dir_reqs = grequests.map(rs)
 
@@ -87,6 +96,7 @@ print("Saving files...")
 rs = [grequests.get(url + "/" + file_names[i],
                     verify=False,
                     stream=False,
+                    auth=auth,
                     session=sessions[i % NUM_SESSIONS]) for i in range(len(file_names))]
 file_reqs = grequests.map(rs)
 
@@ -114,6 +124,7 @@ for i in range(len(sub_names)):
     rs = [grequests.get(url + "/" + sub_names[i] + "/" + sub_items[i][j],
                         verify=False,
                         stream=False,
+                        auth=auth,
                         session=sessions[j % NUM_SESSIONS]) for j in range(len(sub_items[i]))]
     req = grequests.map(rs)
     os.makedirs(output + "/" + sub_names[i], exist_ok=True)
